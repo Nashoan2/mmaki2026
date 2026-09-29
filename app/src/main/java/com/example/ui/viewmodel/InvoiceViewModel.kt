@@ -408,6 +408,7 @@ class InvoiceViewModel(application: Application) : AndroidViewModel(application)
 
   fun updateInvoiceDate(date: String) {
     _uiState.value = _uiState.value.copy(invoiceDate = date)
+    calculateExpiryDate()
   }
 
   fun updateInvoiceDateOnly(invoiceId: Long, newDate: String) {
@@ -429,15 +430,24 @@ class InvoiceViewModel(application: Application) : AndroidViewModel(application)
   private fun calculateInitialExpiryDate(months: Int): String {
     val cal = Calendar.getInstance()
     cal.add(Calendar.MONTH, months)
+    cal.add(Calendar.DAY_OF_MONTH, -1)
     val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.US)
     return sdf.format(cal.time)
   }
 
   fun calculateExpiryDate() {
+    // في حالة تعديل الفاتورة لا يتغير تاريخ الانتهاء نهائياً
+    if (_uiState.value.editingInvoiceId != null) return
     if (_uiState.value.subscriptionType == "tournament") return
     val months = _uiState.value.qty.toIntOrNull() ?: 3
     val cal = Calendar.getInstance()
+    val invoiceDateStr = _uiState.value.invoiceDate.trim()
+    val parsedDate = if (invoiceDateStr.isNotBlank()) ArabicNumberHelper.parseDate(invoiceDateStr) else null
+    if (parsedDate != null) {
+      cal.time = parsedDate
+    }
     cal.add(Calendar.MONTH, months)
+    cal.add(Calendar.DAY_OF_MONTH, -1)
     val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.US)
     _uiState.value = _uiState.value.copy(endDate = sdf.format(cal.time))
   }
@@ -1111,7 +1121,7 @@ class InvoiceViewModel(application: Application) : AndroidViewModel(application)
     if (state.editingInvoiceId != null) {
       val existingInv = repository.savedInvoices.find { it.id == state.editingInvoiceId }
       if (existingInv != null) {
-        // Modifying existing invoice
+        // Modifying existing invoice - preserve existing endDate strictly
         val updatedInvoice = InvoiceData(
           id = existingInv.id,
           invNum = finalInvNum,
@@ -1123,7 +1133,7 @@ class InvoiceViewModel(application: Application) : AndroidViewModel(application)
           type = state.subscriptionType,
           qty = qty,
           desc = mainDesc,
-          endDate = state.endDate,
+          endDate = if (existingInv.endDate.isNotBlank()) existingInv.endDate else state.endDate,
           currency = state.currency,
           extraItems = state.extraItems,
           grandTotal = grandTotal,

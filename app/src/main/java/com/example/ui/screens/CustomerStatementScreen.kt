@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -68,6 +70,8 @@ import com.example.data.Customer
 import com.example.data.ReportCustomizationConfig
 import com.example.data.StoreConfig
 import com.example.ui.components.AlmamlakaLogoBadge
+import androidx.compose.material3.LocalTextStyle
+import com.example.ui.theme.getReportFontFamily
 import com.example.ui.theme.parseHexColor
 import com.example.util.ArabicNumberHelper
 import com.example.util.PrintHelper
@@ -147,10 +151,16 @@ fun CustomerStatementScreen(
   val primaryBlue = parseHexColor(reportConfig.tableBorderColorHex, Color(0xFF0070BA))
   val textBlue = parseHexColor(reportConfig.tableBorderColorHex, Color(0xFF0288D1))
   val purpleBrand = parseHexColor(reportConfig.headerColorHex, Color(0xFF1A237E))
+  val primaryText = parseHexColor(reportConfig.primaryTextColorHex, Color(0xFF111111))
   val creditGreen = Color(0xFF2E7D32)
   val debitRed = Color(0xFFD32F2F)
+  val fontScale = reportConfig.fontScale
+  val reportFont = getReportFontFamily(reportConfig.fontFamily)
 
-  CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+  CompositionLocalProvider(
+    LocalLayoutDirection provides LayoutDirection.Rtl,
+    LocalTextStyle provides LocalTextStyle.current.copy(fontFamily = reportFont)
+  ) {
     Box(
       modifier = Modifier
         .fillMaxSize()
@@ -559,6 +569,28 @@ fun CustomerStatementScreen(
                         maxLines = 1,
                         softWrap = false
                       )
+                      if (reportConfig.showBranch && storeConfig.branch.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                          text = "الفرع / ${storeConfig.branch}",
+                          fontSize = (11 * reportConfig.fontScale).sp,
+                          fontWeight = FontWeight.Bold,
+                          color = purpleBrand,
+                          maxLines = 1,
+                          softWrap = false
+                        )
+                      }
+                      if (reportConfig.taxOrCrNumber.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                          text = "الرقم الضريبي/السجل: ${reportConfig.taxOrCrNumber}",
+                          fontSize = (10.5 * reportConfig.fontScale).sp,
+                          fontWeight = FontWeight.Bold,
+                          color = primaryText,
+                          maxLines = 1,
+                          softWrap = false
+                        )
+                      }
                     }
                   } else {
                     Spacer(modifier = Modifier.weight(1.3f))
@@ -632,20 +664,24 @@ fun CustomerStatementScreen(
               modifier = Modifier.fillMaxWidth(),
               verticalAlignment = Alignment.CenterVertically
             ) {
-              Text(
-                text = buildAnnotatedString {
-                  append("رقم الحساب / ")
-                  withStyle(SpanStyle(color = Color(0xFFC62828), fontWeight = FontWeight.Black)) {
-                    append(customer.accountNumber)
-                  }
-                },
-                fontSize = 12.5.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.Black,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.weight(1f),
-                maxLines = 1
-              )
+              if (reportConfig.showCustomerAccountNumber) {
+                Text(
+                  text = buildAnnotatedString {
+                    append("رقم الحساب / ")
+                    withStyle(SpanStyle(color = Color(0xFFC62828), fontWeight = FontWeight.Black)) {
+                      append(customer.accountNumber)
+                    }
+                  },
+                  fontSize = (12.5 * reportConfig.fontScale).sp,
+                  fontWeight = FontWeight.Black,
+                  color = primaryText,
+                  textAlign = TextAlign.Start,
+                  modifier = Modifier.weight(1f),
+                  maxLines = 1
+                )
+              } else {
+                Spacer(modifier = Modifier.weight(1f))
+              }
 
               // Purple Badge in the Center: unified with invoice badge
               Box(
@@ -658,36 +694,40 @@ fun CustomerStatementScreen(
                 Text(
                   text = "كشف حساب",
                   color = Color.White,
-                  fontSize = 12.sp,
+                  fontSize = (12 * reportConfig.fontScale).sp,
                   fontWeight = FontWeight.Black,
                   maxLines = 1,
                   softWrap = false
                 )
               }
 
-              val dateParts = ArabicNumberHelper.formatTo24HourDateTime(dateStr).trim().split(" ")
-              val rDatePart = dateParts.firstOrNull { it.contains("/") } ?: dateParts.firstOrNull() ?: ""
-              val rTimePart = dateParts.filter { it != rDatePart }.joinToString(" ")
+              if (reportConfig.showDateTime) {
+                val dateParts = ArabicNumberHelper.formatTo24HourDateTime(dateStr).trim().split(" ")
+                val rDatePart = dateParts.firstOrNull { it.contains("/") } ?: dateParts.firstOrNull() ?: ""
+                val rTimePart = dateParts.filter { it != rDatePart }.joinToString(" ")
 
-              Text(
-                text = buildAnnotatedString {
-                  withStyle(SpanStyle(color = Color(0xFF0070BA), fontWeight = FontWeight.Black)) {
-                    append("📅 ")
-                  }
-                  append("$rDatePart ")
-                  if (rTimePart.isNotEmpty()) {
-                    withStyle(SpanStyle(color = Color(0xFFC62828), fontWeight = FontWeight.Black)) {
-                      append(rTimePart)
+                Text(
+                  text = buildAnnotatedString {
+                    withStyle(SpanStyle(color = primaryBlue, fontWeight = FontWeight.Black)) {
+                      append("📅 ")
                     }
-                  }
-                },
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.Black,
-                modifier = Modifier.weight(1f),
-                textAlign = TextAlign.End,
-                maxLines = 1
-              )
+                    append("$rDatePart ")
+                    if (rTimePart.isNotEmpty()) {
+                      withStyle(SpanStyle(color = Color(0xFFC62828), fontWeight = FontWeight.Black)) {
+                        append(rTimePart)
+                      }
+                    }
+                  },
+                  fontSize = (11 * reportConfig.fontScale).sp,
+                  fontWeight = FontWeight.Black,
+                  color = primaryText,
+                  modifier = Modifier.weight(1f),
+                  textAlign = TextAlign.End,
+                  maxLines = 1
+                )
+              } else {
+                Spacer(modifier = Modifier.weight(1f))
+              }
             }
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -1105,6 +1145,19 @@ fun CustomerStatementScreen(
               }
             }
 
+            if (reportConfig.showAmountInWords && finalBalance != 0.0) {
+              val curr = customer.transactions.lastOrNull()?.currency?.ifEmpty { "USD" } ?: "USD"
+              val words = "${ArabicNumberHelper.numberToArabicWords(Math.abs(finalBalance))} ${ArabicNumberHelper.getCurrencyName(curr)}"
+              Text(
+                text = "المبلغ كتابة: $words",
+                fontSize = (12 * reportConfig.fontScale).sp,
+                fontWeight = FontWeight.Bold,
+                color = primaryText,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+              )
+            }
+
             // SIGNATURES & APPROVAL SEAL (if enabled in reportConfig)
             if (reportConfig.showSignatures) {
               Spacer(modifier = Modifier.height(18.dp))
@@ -1201,6 +1254,22 @@ fun CustomerStatementScreen(
                     modifier = Modifier.fillMaxWidth(0.85f)
                   )
                 }
+              }
+            } else if (reportConfig.showStampSeal) {
+              Spacer(modifier = Modifier.height(10.dp))
+              Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFFFFEBEE),
+                border = BorderStroke(1.5.dp, Color(0xFFC62828)),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+              ) {
+                Text(
+                  text = "★ معتمد رسمياً APPROVED ★",
+                  fontSize = (11.5 * reportConfig.fontScale).sp,
+                  fontWeight = FontWeight.Black,
+                  color = Color(0xFFC62828),
+                  modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
+                )
               }
             }
 

@@ -34,17 +34,16 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.data.ReportCustomizationConfig
 import com.example.ui.screens.ShadedFieldColorCustomizerDialog
 import com.example.ui.theme.computeShadedBorderColor
+import com.example.ui.theme.getReportFontFamily
 import com.example.ui.theme.parseHexColor
 import com.example.ui.viewmodel.InvoiceViewModel
 
 private val FONT_OPTIONS = listOf(
-  "sans-serif" to "خط النظام القياسي (افتراضي)",
-  "Tajawal" to "خط تجوال (عصري ومقروء)",
   "Cairo" to "خط كايرو (رسمي واحترافي)",
+  "Tajawal" to "خط تجوال (عصري ومقروء)",
   "Almarai" to "خط المراعي (أنيق وواضح)",
   "Amiri" to "خط أميري (نسخي كلاسيكي)",
-  "Changa" to "خط تشانغا (عريض ومميز)",
-  "Aref Ruqaa" to "خط الرقعة (عربي أصيل)"
+  "sans-serif" to "خط النظام القياسي (افتراضي)"
 )
 
 private val PRIMARY_TEXT_COLORS = listOf(
@@ -243,7 +242,10 @@ fun ReportCustomizerModal(
               }
 
               Button(
-                onClick = onDismiss,
+                onClick = {
+                  viewModel.showToast("✅ تم حفظ وتطبيق كافة إعدادات وتخصيصات التقارير بنجاح.")
+                  onDismiss()
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0070BA)),
                 shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
@@ -957,88 +959,94 @@ private fun LiveReportPreviewCard(config: ReportCustomizationConfig) {
   val tColor = parseColorSafe(config.primaryTextColorHex, Color(0xFF111111))
   val bColor = parseColorSafe(config.tableBorderColorHex, Color(0xFF0070BA))
   val baseSize = (13 * config.fontScale).sp
+  val reportFont = getReportFontFamily(config.fontFamily)
 
-  Card(
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(10.dp),
-    colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
-    border = BorderStroke(1.5.dp, bColor)
+  CompositionLocalProvider(
+    LocalLayoutDirection provides LayoutDirection.Rtl,
+    LocalTextStyle provides LocalTextStyle.current.copy(fontFamily = reportFont)
   ) {
-    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        Text("👁️ معاينة حية للمظهر الحالي في التقارير:", fontSize = 12.sp, fontWeight = FontWeight.Black, color = hColor)
-        Text("حجم الخط: ${(config.fontScale * 100).toInt()}% | نوع الخط: ${config.fontFamily}", fontSize = 10.sp, color = Color.Gray)
-      }
-
-      if (config.customNoticeBadge.isNotBlank()) {
-        Surface(
-          color = Color(0xFFE8F5E9),
-          shape = RoundedCornerShape(4.dp),
-          border = BorderStroke(1.dp, Color(0xFF81C784)),
-          modifier = Modifier.align(Alignment.CenterHorizontally)
+    Card(
+      modifier = Modifier.fillMaxWidth(),
+      shape = RoundedCornerShape(10.dp),
+      colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
+      border = BorderStroke(1.5.dp, bColor)
+    ) {
+      Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
         ) {
-          Text(config.customNoticeBadge, fontSize = (11 * config.fontScale).sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32), modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+          Text("👁️ معاينة حية للمظهر الحالي في التقارير:", fontSize = 12.sp, fontWeight = FontWeight.Black, color = hColor)
+          Text("حجم الخط: ${(config.fontScale * 100).toInt()}% | نوع الخط: ${config.fontFamily}", fontSize = 10.sp, color = Color.Gray)
         }
-      }
 
-      if (config.customHeaderTitle.isNotBlank()) {
-        Text(config.customHeaderTitle, fontSize = (14 * config.fontScale).sp, fontWeight = FontWeight.Black, color = hColor, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-      }
-
-      Text("فاتورة مبيعات / سند قبض / كشف حساب", fontSize = (16 * config.fontScale).sp, fontWeight = FontWeight.Black, color = hColor, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-
-      if (config.showStoreInfo) {
-        Text("مؤسسة التميز للتقنية والتجارة - تلفون: 0500000000", fontSize = baseSize, color = tColor, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-      }
-
-      if (config.taxOrCrNumber.isNotBlank()) {
-        Text("الرقم الضريبي / السجل: ${config.taxOrCrNumber}", fontSize = (11 * config.fontScale).sp, color = tColor, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-      }
-
-      HorizontalDivider(color = bColor, thickness = 1.dp)
-
-      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("اسم العميل: شركة الأفق للتجارة", fontSize = baseSize, fontWeight = FontWeight.Bold, color = tColor)
-        if (config.showCustomerAccountNumber) {
-          Text("(رقم الحساب: 1001)", fontSize = baseSize, color = hColor, fontWeight = FontWeight.Bold)
+        if (config.customNoticeBadge.isNotBlank()) {
+          Surface(
+            color = Color(0xFFE8F5E9),
+            shape = RoundedCornerShape(4.dp),
+            border = BorderStroke(1.dp, Color(0xFF81C784)),
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+          ) {
+            Text(config.customNoticeBadge, fontSize = (11 * config.fontScale).sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32), modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+          }
         }
-      }
 
-      Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("المبلغ: 1,500.00 $", fontSize = (15 * config.fontScale).sp, fontWeight = FontWeight.Black, color = hColor)
-        if (config.showDateTime) {
-          Text("2026-09-16", fontSize = (11 * config.fontScale).sp, color = Color.Gray)
+        if (config.customHeaderTitle.isNotBlank()) {
+          Text(config.customHeaderTitle, fontSize = (14 * config.fontScale).sp, fontWeight = FontWeight.Black, color = hColor, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
-      }
 
-      if (config.showAmountInWords) {
-        Text("ألف وخمسمائة دولار أمريكي", fontSize = baseSize, color = tColor)
-      }
+        Text("فاتورة مبيعات / سند قبض / كشف حساب", fontSize = (16 * config.fontScale).sp, fontWeight = FontWeight.Black, color = hColor, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
 
-      if (config.showStampSeal) {
-        Surface(
-          color = Color(0xFFFFEBEE),
-          shape = RoundedCornerShape(20.dp),
-          border = BorderStroke(1.5.dp, Color(0xFFC62828)),
-          modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 4.dp)
-        ) {
-          Text("✓ معتمد رسمياً APPROVED", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFFC62828), modifier = Modifier.padding(horizontal = 12.dp, vertical = 3.dp))
+        if (config.showStoreInfo) {
+          Text("مؤسسة التميز للتقنية والتجارة - تلفون: 0500000000", fontSize = baseSize, color = tColor, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
-      }
 
-      if (config.showSignatures) {
-        Row(modifier = Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-          Text("توقيع المحاسب: ${config.accountantSignatureName.ifEmpty { "..........." }}", fontSize = (11 * config.fontScale).sp, color = tColor)
-          Text("توقيع المستلم: ...........", fontSize = (11 * config.fontScale).sp, color = tColor)
+        if (config.taxOrCrNumber.isNotBlank()) {
+          Text("الرقم الضريبي / السجل: ${config.taxOrCrNumber}", fontSize = (11 * config.fontScale).sp, color = tColor, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         }
-      }
 
-      if (config.customFooterText.isNotBlank()) {
-        Text(config.customFooterText, fontSize = (11 * config.fontScale).sp, color = Color(0xFF555555), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
+        HorizontalDivider(color = bColor, thickness = 1.dp)
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+          Text("اسم العميل: شركة الأفق للتجارة", fontSize = baseSize, fontWeight = FontWeight.Bold, color = tColor)
+          if (config.showCustomerAccountNumber) {
+            Text("(رقم الحساب: 1001)", fontSize = baseSize, color = hColor, fontWeight = FontWeight.Bold)
+          }
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+          Text("المبلغ: 1,500.00 $", fontSize = (15 * config.fontScale).sp, fontWeight = FontWeight.Black, color = hColor)
+          if (config.showDateTime) {
+            Text("2026-09-16", fontSize = (11 * config.fontScale).sp, color = Color.Gray)
+          }
+        }
+
+        if (config.showAmountInWords) {
+          Text("ألف وخمسمائة دولار أمريكي", fontSize = baseSize, color = tColor)
+        }
+
+        if (config.showStampSeal) {
+          Surface(
+            color = Color(0xFFFFEBEE),
+            shape = RoundedCornerShape(20.dp),
+            border = BorderStroke(1.5.dp, Color(0xFFC62828)),
+            modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 4.dp)
+          ) {
+            Text("✓ معتمد رسمياً APPROVED", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFFC62828), modifier = Modifier.padding(horizontal = 12.dp, vertical = 3.dp))
+          }
+        }
+
+        if (config.showSignatures) {
+          Row(modifier = Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("توقيع المحاسب: ${config.accountantSignatureName.ifEmpty { "..........." }}", fontSize = (11 * config.fontScale).sp, color = tColor)
+            Text("توقيع المستلم: ...........", fontSize = (11 * config.fontScale).sp, color = tColor)
+          }
+        }
+
+        if (config.customFooterText.isNotBlank()) {
+          Text(config.customFooterText, fontSize = (11 * config.fontScale).sp, color = Color(0xFF555555), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
+        }
       }
     }
   }

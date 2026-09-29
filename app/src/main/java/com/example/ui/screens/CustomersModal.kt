@@ -96,6 +96,9 @@ import com.example.data.ExchangeRates
 import com.example.data.ReportCustomizationConfig
 import com.example.data.StoreConfig
 import com.example.data.VoucherItem
+import androidx.compose.material3.LocalTextStyle
+import com.example.ui.theme.getReportFontFamily
+import com.example.ui.theme.parseHexColor
 import com.example.ui.components.AlmamlakaLogoBadge
 import com.example.ui.viewmodel.InvoiceViewModel
 import com.example.util.ArabicNumberHelper
@@ -3665,13 +3668,22 @@ fun VoucherPreviewDialog(
   val lightBg = if (isPayment) Color(0xFFFFEBEE) else Color(0xFFE8F5E9)
   val sym = ArabicNumberHelper.getCurrencySymbol(voucher.currency)
   val currName = ArabicNumberHelper.getCurrencyName(voucher.currency)
-  val amountInWords = "${ArabicNumberHelper.numberToArabicWords(voucher.amount)} $currName"
+  val amountInWords = if (reportConfig.showAmountInWords) "${ArabicNumberHelper.numberToArabicWords(voucher.amount)} $currName" else ""
+
+  val scale = reportConfig.fontScale
+  val reportFont = getReportFontFamily(reportConfig.fontFamily)
+  val headerColor = parseHexColor(reportConfig.headerColorHex, Color(0xFF1A237E))
+  val primaryText = parseHexColor(reportConfig.primaryTextColorHex, Color(0xFF111111))
+  val tableBorder = parseHexColor(reportConfig.tableBorderColorHex, mainColor)
 
   Dialog(
     onDismissRequest = onDismiss,
     properties = DialogProperties(usePlatformDefaultWidth = false)
   ) {
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    CompositionLocalProvider(
+      LocalLayoutDirection provides LayoutDirection.Rtl,
+      LocalTextStyle provides LocalTextStyle.current.copy(fontFamily = reportFont)
+    ) {
       Card(
         modifier = Modifier
           .fillMaxWidth(0.96f)
@@ -3679,7 +3691,7 @@ fun VoucherPreviewDialog(
           .padding(8.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(2.dp, mainColor)
+        border = BorderStroke(2.dp, tableBorder)
       ) {
         Column(
           modifier = Modifier
@@ -3695,8 +3707,8 @@ fun VoucherPreviewDialog(
             Text(
               "👁️ معاينة $title",
               fontWeight = FontWeight.ExtraBold,
-              fontSize = 17.sp,
-              color = mainColor
+              fontSize = (17 * scale).sp,
+              color = headerColor
             )
             IconButton(onClick = onDismiss) {
               Icon(Icons.Default.Close, contentDescription = "إغلاق", tint = Color.Gray)
@@ -3712,36 +3724,87 @@ fun VoucherPreviewDialog(
               .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(10.dp)
           ) {
-            // Header with Store Info & Logo
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              // Right: Arabic info
-              Column(modifier = Modifier.weight(1f)) {
-                Text(storeConfig.storeNameAr, fontWeight = FontWeight.Black, fontSize = 15.sp, color = Color(0xFF1A237E))
-                Text(storeConfig.addressAr, fontSize = 11.sp, color = Color.DarkGray)
-                Text("هاتف: ${storeConfig.phone}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A237E))
-              }
-
-              // Center: Logo
-              Box(
-                modifier = Modifier.weight(0.8f),
-                contentAlignment = Alignment.Center
+            // Optional Notice Badge
+            if (reportConfig.customNoticeBadge.isNotBlank()) {
+              Surface(
+                color = Color(0xFFFFF9E6),
+                shape = RoundedCornerShape(4.dp),
+                border = BorderStroke(1.dp, Color(0xFFFFB300)),
+                modifier = Modifier.fillMaxWidth()
               ) {
-                AlmamlakaLogoBadge(size = 72.dp, logoBase64 = storeConfig.logoBase64)
+                Text(
+                  text = reportConfig.customNoticeBadge,
+                  fontSize = (11.5 * scale).sp,
+                  fontWeight = FontWeight.Bold,
+                  color = Color(0xFFB78103),
+                  textAlign = TextAlign.Center,
+                  modifier = Modifier.padding(vertical = 3.dp, horizontal = 6.dp)
+                )
               }
+            }
 
-              // Left: English info
-              CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Column(
-                  modifier = Modifier.weight(1f),
-                  horizontalAlignment = Alignment.End
-                ) {
-                  Text(storeConfig.storeNameEn, fontWeight = FontWeight.Black, fontSize = 13.sp, color = Color(0xFF1A237E))
-                  Text(storeConfig.addressEn, fontSize = 10.sp, color = Color.DarkGray)
-                  Text("TEL: ${storeConfig.phone}", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A237E))
+            // Optional Custom Header Title
+            if (reportConfig.customHeaderTitle.isNotBlank()) {
+              Text(
+                text = reportConfig.customHeaderTitle,
+                fontSize = (15 * scale).sp,
+                fontWeight = FontWeight.Black,
+                color = headerColor,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+              )
+            }
+
+            // Header with Store Info & Logo
+            if (reportConfig.showStoreInfo || reportConfig.showLogo) {
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                // Right: Arabic info
+                if (reportConfig.showStoreInfo) {
+                  Column(modifier = Modifier.weight(1f)) {
+                    Text(storeConfig.storeNameAr.ifBlank { "المملكة للإلكترونيات" }, fontWeight = FontWeight.Black, fontSize = (15 * scale).sp, color = headerColor)
+                    Text(storeConfig.addressAr.ifBlank { "إب شارع تعز" }, fontSize = (11 * scale).sp, color = primaryText)
+                    Text("هاتف: ${storeConfig.phone.ifBlank { "772707736" }}", fontSize = (11 * scale).sp, fontWeight = FontWeight.Bold, color = headerColor)
+                    if (reportConfig.showBranch && storeConfig.branch.isNotBlank()) {
+                      Text("الفرع: ${storeConfig.branch}", fontSize = (10.5 * scale).sp, fontWeight = FontWeight.Bold, color = headerColor)
+                    }
+                    if (reportConfig.taxOrCrNumber.isNotBlank()) {
+                      Text("الرقم الضريبي/السجل: ${reportConfig.taxOrCrNumber}", fontSize = (10.5 * scale).sp, fontWeight = FontWeight.Bold, color = primaryText)
+                    }
+                  }
+                } else {
+                  Spacer(modifier = Modifier.weight(1f))
+                }
+
+                // Center: Logo
+                if (reportConfig.showLogo) {
+                  Box(
+                    modifier = Modifier.weight(0.8f),
+                    contentAlignment = Alignment.Center
+                  ) {
+                    AlmamlakaLogoBadge(size = 68.dp, logoBase64 = storeConfig.logoBase64)
+                  }
+                } else {
+                  Spacer(modifier = Modifier.weight(0.8f))
+                }
+
+                // Left: English info
+                if (reportConfig.showStoreInfo) {
+                  CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    Column(
+                      modifier = Modifier.weight(1f),
+                      horizontalAlignment = Alignment.End
+                    ) {
+                      Text(storeConfig.storeNameEn.ifBlank { "ALMamlaka Electronics" }, fontWeight = FontWeight.Black, fontSize = (13 * scale).sp, color = headerColor)
+                      Text(storeConfig.addressEn.ifBlank { "YEMEN Ibb" }, fontSize = (10 * scale).sp, color = primaryText)
+                      Text("TEL: ${storeConfig.phone.ifBlank { "772707736" }}", fontSize = (11 * scale).sp, fontWeight = FontWeight.Bold, color = headerColor)
+                    }
+                  }
+                } else {
+                  Spacer(modifier = Modifier.weight(1f))
                 }
               }
             }
@@ -3755,8 +3818,8 @@ fun VoucherPreviewDialog(
               contentAlignment = Alignment.Center
             ) {
               Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(title, color = Color.White, fontWeight = FontWeight.Black, fontSize = 17.sp)
-                Text(titleEn, color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                Text(title, color = Color.White, fontWeight = FontWeight.Black, fontSize = (17 * scale).sp)
+                Text(titleEn, color = Color.White.copy(alpha = 0.85f), fontWeight = FontWeight.Bold, fontSize = (11 * scale).sp)
               }
             }
 
@@ -3774,16 +3837,20 @@ fun VoucherPreviewDialog(
                 horizontalArrangement = Arrangement.SpaceBetween
               ) {
                 Column {
-                  Text("رقم السند:", fontSize = 12.sp, color = Color.DarkGray)
-                  Text(voucher.voucherNum, fontWeight = FontWeight.Black, fontSize = 15.sp, color = mainColor)
+                  Text("رقم السند:", fontSize = (12 * scale).sp, color = Color.DarkGray)
+                  Text(voucher.voucherNum, fontWeight = FontWeight.Black, fontSize = (15 * scale).sp, color = mainColor)
                 }
-                Column {
-                  Text("الفرع:", fontSize = 12.sp, color = Color.DarkGray)
-                  Text(storeConfig.branch, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color(0xFF0070BA))
+                if (reportConfig.showBranch && storeConfig.branch.isNotBlank()) {
+                  Column {
+                    Text("الفرع:", fontSize = (12 * scale).sp, color = Color.DarkGray)
+                    Text(storeConfig.branch, fontWeight = FontWeight.Bold, fontSize = (13 * scale).sp, color = headerColor)
+                  }
                 }
-                Column {
-                  Text("التاريخ:", fontSize = 12.sp, color = Color.DarkGray)
-                  Text(voucher.date, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.Black)
+                if (reportConfig.showDateTime) {
+                  Column {
+                    Text("التاريخ:", fontSize = (12 * scale).sp, color = Color.DarkGray)
+                    Text(voucher.date, fontWeight = FontWeight.Bold, fontSize = (13 * scale).sp, color = primaryText)
+                  }
                 }
               }
             }
@@ -3801,20 +3868,22 @@ fun VoucherPreviewDialog(
                   .padding(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
               ) {
-                Text("المبلغ الإجمالي", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                Text("المبلغ الإجمالي", fontSize = (12 * scale).sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                 Text(
                   "${ArabicNumberHelper.formatAmount(voucher.amount)} $sym",
-                  fontSize = 24.sp,
+                  fontSize = (24 * scale).sp,
                   fontWeight = FontWeight.Black,
                   color = mainColor
                 )
-                Text(
-                  amountInWords,
-                  fontSize = 13.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Color(0xFF424242),
-                  textAlign = TextAlign.Center
-                )
+                if (reportConfig.showAmountInWords && amountInWords.isNotBlank()) {
+                  Text(
+                    amountInWords,
+                    fontSize = (13 * scale).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryText,
+                    textAlign = TextAlign.Center
+                  )
+                }
               }
             }
 
@@ -3823,7 +3892,7 @@ fun VoucherPreviewDialog(
               modifier = Modifier.fillMaxWidth(),
               shape = RoundedCornerShape(8.dp),
               colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
-              border = BorderStroke(1.dp, Color(0xFFE0E0E0))
+              border = BorderStroke(1.dp, tableBorder)
             ) {
               Column(
                 modifier = Modifier
@@ -3835,15 +3904,16 @@ fun VoucherPreviewDialog(
                   Text(
                     if (isPayment) "يصرف للمكرم:" else "استلمنا من المكرم:",
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 13.sp,
+                    fontSize = (13 * scale).sp,
                     color = Color.DarkGray,
                     modifier = Modifier.width(130.dp)
                   )
+                  val accountStr = if (reportConfig.showCustomerAccountNumber && voucher.account.isNotBlank()) " (حساب: ${voucher.account})" else ""
                   Text(
-                    "${voucher.customerName} (حساب: ${voucher.account})",
+                    "${voucher.customerName}$accountStr",
                     fontWeight = FontWeight.Black,
-                    fontSize = 14.sp,
-                    color = Color.Black
+                    fontSize = (14 * scale).sp,
+                    color = primaryText
                   )
                 }
                 HorizontalDivider(color = Color(0xFFE0E0E0))
@@ -3851,27 +3921,28 @@ fun VoucherPreviewDialog(
                   Text(
                     "وذلك مقابل / البيان:",
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 13.sp,
+                    fontSize = (13 * scale).sp,
                     color = Color.DarkGray,
                     modifier = Modifier.width(130.dp)
                   )
                   Text(
                     voucher.note.ifEmpty { "تسديد حساب / حركة نقدية" },
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = Color.Black
+                    fontSize = (13 * scale).sp,
+                    color = primaryText
                   )
                 }
               }
             }
 
-            // Signatures
+            // Signatures & Official Stamp
             if (reportConfig.showSignatures) {
               Row(
                 modifier = Modifier
                   .fillMaxWidth()
-                  .padding(top = 16.dp, bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                  .padding(top = 14.dp, bottom = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
               ) {
                 Column(
                   horizontalAlignment = Alignment.CenterHorizontally,
@@ -3879,25 +3950,90 @@ fun VoucherPreviewDialog(
                 ) {
                   Text(
                     text = if (reportConfig.accountantSignatureName.isNotBlank())
-                      "توقيع أمين الصندوق / المحاسب (${reportConfig.accountantSignatureName})"
+                      "توقيع أمين الصندوق (${reportConfig.accountantSignatureName})"
                     else
                       "توقيع أمين الصندوق / المحاسب",
-                    fontSize = 12.sp,
+                    fontSize = (11.5 * scale).sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Gray
+                    color = headerColor
                   )
-                  Spacer(modifier = Modifier.height(28.dp))
+                  Spacer(modifier = Modifier.height(24.dp))
                   HorizontalDivider(modifier = Modifier.fillMaxWidth(0.7f), thickness = 1.dp, color = Color.DarkGray)
                 }
+
+                if (reportConfig.showStampSeal) {
+                  Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFFFEBEE),
+                    border = BorderStroke(1.5.dp, Color(0xFFC62828)),
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                  ) {
+                    Column(
+                      modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                      horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                      Text(
+                        text = "★ معتمد ★",
+                        fontSize = (11 * scale).sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFC62828)
+                      )
+                      Text(
+                        text = "APPROVED",
+                        fontSize = (8 * scale).sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFC62828)
+                      )
+                    }
+                  }
+                }
+
                 Column(
                   horizontalAlignment = Alignment.CenterHorizontally,
                   modifier = Modifier.weight(1f)
                 ) {
-                  Text("توقيع المستلم / العميل", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
-                  Spacer(modifier = Modifier.height(28.dp))
+                  Text(
+                    text = if (reportConfig.managerSignatureName.isNotBlank())
+                      "توقيع المستلم (${reportConfig.managerSignatureName})"
+                    else
+                      "توقيع المستلم / العميل",
+                    fontSize = (11.5 * scale).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = headerColor
+                  )
+                  Spacer(modifier = Modifier.height(24.dp))
                   HorizontalDivider(modifier = Modifier.fillMaxWidth(0.7f), thickness = 1.dp, color = Color.DarkGray)
                 }
               }
+            } else if (reportConfig.showStampSeal) {
+              Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFFFFEBEE),
+                border = BorderStroke(1.5.dp, Color(0xFFC62828)),
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp)
+              ) {
+                Text(
+                  text = "★ معتمد رسمياً APPROVED ★",
+                  fontSize = (11.5 * scale).sp,
+                  fontWeight = FontWeight.Black,
+                  color = Color(0xFFC62828),
+                  modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                )
+              }
+            }
+
+            // Custom Footer Note
+            if (reportConfig.customFooterText.isNotBlank()) {
+              Text(
+                text = reportConfig.customFooterText,
+                fontSize = (11 * scale).sp,
+                color = Color.DarkGray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .background(Color(0xFFF8F9FA), RoundedCornerShape(4.dp))
+                  .padding(6.dp)
+              )
             }
           }
 

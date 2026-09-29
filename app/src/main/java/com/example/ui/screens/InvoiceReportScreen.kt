@@ -72,11 +72,18 @@ import com.example.data.ReportCustomizationConfig
 import com.example.data.StoreConfig
 import com.example.ui.components.AlmamlakaLogoBadge
 import com.example.util.ArabicNumberHelper
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.runtime.compositionLocalOf
+import com.example.ui.theme.getReportFontFamily
+import com.example.ui.theme.parseHexColor
 import com.example.util.PrintHelper
 import com.example.util.ScreenshotHelper
 import kotlinx.coroutines.launch
 
-private val InvoiceBorderColor = Color(0xFF0070BA)
+val LocalReportBorderColor = compositionLocalOf { Color(0xFF0070BA) }
+val LocalReportHeaderColor = compositionLocalOf { Color(0xFF5E258D) }
+val LocalReportTextColor = compositionLocalOf { Color(0xFF111111) }
+val LocalReportFontScale = compositionLocalOf { 1.0f }
 
 @Composable
 fun InvoiceReportScreen(
@@ -99,6 +106,11 @@ fun InvoiceReportScreen(
   var isDisplayMode by remember { mutableStateOf(initialDisplayMode) }
   val effectiveReportConfig = reportConfig
 
+  val tableBorderColor = parseHexColor(effectiveReportConfig.tableBorderColorHex, Color(0xFF0070BA))
+  val headerColor = parseHexColor(effectiveReportConfig.headerColorHex, Color(0xFF5E258D))
+  val primaryTextColor = parseHexColor(effectiveReportConfig.primaryTextColorHex, Color(0xFF111111))
+  val fontScale = effectiveReportConfig.fontScale
+
   val sym = ArabicNumberHelper.getCurrencySymbol(invoice.currency)
   val currName = ArabicNumberHelper.getCurrencyName(invoice.currency)
   val grandTotal = invoice.grandTotal
@@ -111,7 +123,16 @@ fun InvoiceReportScreen(
   val effectiveAddressEn = storeConfig.addressEn.ifBlank { "YEMEN Ibb" }
   val effectivePhone = storeConfig.phone.ifBlank { "772707736" }
 
-  CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+  val reportFont = getReportFontFamily(effectiveReportConfig.fontFamily)
+
+  CompositionLocalProvider(
+    LocalLayoutDirection provides LayoutDirection.Rtl,
+    LocalReportBorderColor provides tableBorderColor,
+    LocalReportHeaderColor provides headerColor,
+    LocalReportTextColor provides primaryTextColor,
+    LocalReportFontScale provides fontScale,
+    LocalTextStyle provides LocalTextStyle.current.copy(fontFamily = reportFont)
+  ) {
     Column(
       modifier = Modifier
         .fillMaxSize()
@@ -355,7 +376,7 @@ fun InvoiceReportScreen(
             }
             drawLayer(graphicsLayer)
           }
-          .border(3.dp, InvoiceBorderColor, RoundedCornerShape(12.dp)),
+          .border(3.dp, tableBorderColor, RoundedCornerShape(12.dp)),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -384,16 +405,16 @@ fun InvoiceReportScreen(
                 val watermarkTextAr = if (storeConfig.wmAr.isNotBlank()) storeConfig.wmAr else effectiveStoreNameAr
                 Text(
                   text = watermarkTextAr,
-                  fontSize = 24.sp,
+                  fontSize = (24 * fontScale).sp,
                   fontWeight = FontWeight.Black,
-                  color = Color(0xFF5E258D).copy(alpha = 0.08f)
+                  color = headerColor.copy(alpha = 0.08f)
                 )
                 Text(
                   text = effectiveStoreNameEn.uppercase(),
-                  fontSize = 18.sp,
+                  fontSize = (18 * fontScale).sp,
                   fontWeight = FontWeight.Black,
                   letterSpacing = 2.sp,
-                  color = Color(0xFF5E258D).copy(alpha = 0.08f)
+                  color = headerColor.copy(alpha = 0.08f)
                 )
               }
             }
@@ -409,9 +430,9 @@ fun InvoiceReportScreen(
             if (effectiveReportConfig.customHeaderTitle.isNotBlank()) {
               Text(
                 text = effectiveReportConfig.customHeaderTitle,
-                fontSize = (16 * effectiveReportConfig.fontScale).sp,
+                fontSize = (16 * fontScale).sp,
                 fontWeight = FontWeight.Black,
-                color = Color(0xFF0070BA),
+                color = headerColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                   .fillMaxWidth()
@@ -432,7 +453,7 @@ fun InvoiceReportScreen(
               ) {
                 Text(
                   text = effectiveReportConfig.customNoticeBadge,
-                  fontSize = (12 * effectiveReportConfig.fontScale).sp,
+                  fontSize = (12 * fontScale).sp,
                   fontWeight = FontWeight.Bold,
                   color = Color(0xFFB78103),
                   textAlign = TextAlign.Center
@@ -455,26 +476,26 @@ fun InvoiceReportScreen(
                   ) {
                     Text(
                       text = effectiveStoreNameAr,
-                      fontSize = (14.5 * effectiveReportConfig.fontScale).sp,
+                      fontSize = (14.5 * fontScale).sp,
                       fontWeight = FontWeight.Black,
-                      color = Color(0xFF5E258D),
-                      lineHeight = 18.sp,
+                      color = headerColor,
+                      lineHeight = (18 * fontScale).sp,
                       maxLines = 2
                     )
                     Text(
                       text = effectiveAddressAr,
-                      fontSize = (11.5 * effectiveReportConfig.fontScale).sp,
+                      fontSize = (11.5 * fontScale).sp,
                       fontWeight = FontWeight.Bold,
-                      color = Color(0xFF333333),
-                      lineHeight = 15.sp,
+                      color = primaryTextColor,
+                      lineHeight = (15 * fontScale).sp,
                       maxLines = 1
                     )
                     Text(
                       text = "تلفون : $effectivePhone",
-                      fontSize = (12.5 * effectiveReportConfig.fontScale).sp,
+                      fontSize = (12.5 * fontScale).sp,
                       fontWeight = FontWeight.Black,
-                      color = Color(0xFF5E258D),
-                      lineHeight = 16.sp,
+                      color = headerColor,
+                      lineHeight = (16 * fontScale).sp,
                       maxLines = 1
                     )
                   }
@@ -508,27 +529,27 @@ fun InvoiceReportScreen(
                       ) {
                         Text(
                           text = effectiveStoreNameEn,
-                          fontSize = (11.5 * effectiveReportConfig.fontScale).sp,
+                          fontSize = (11.5 * fontScale).sp,
                           fontWeight = FontWeight.Black,
-                          color = Color(0xFF5E258D),
-                          lineHeight = 16.sp,
+                          color = headerColor,
+                          lineHeight = (16 * fontScale).sp,
                           maxLines = 2,
                           softWrap = true
                         )
                         Text(
                           text = effectiveAddressEn,
-                          fontSize = (11.5 * effectiveReportConfig.fontScale).sp,
+                          fontSize = (11.5 * fontScale).sp,
                           fontWeight = FontWeight.Bold,
-                          color = Color(0xFF333333),
-                          lineHeight = 15.sp,
+                          color = primaryTextColor,
+                          lineHeight = (15 * fontScale).sp,
                           maxLines = 1
                         )
                         Text(
                           text = "TEL:$effectivePhone",
-                          fontSize = (12.5 * effectiveReportConfig.fontScale).sp,
+                          fontSize = (12.5 * fontScale).sp,
                           fontWeight = FontWeight.Black,
-                          color = Color(0xFF5E258D),
-                          lineHeight = 16.sp,
+                          color = headerColor,
+                          lineHeight = (16 * fontScale).sp,
                           maxLines = 1
                         )
                       }
@@ -539,11 +560,11 @@ fun InvoiceReportScreen(
                 }
               }
 
-              // Blue Horizontal Divider below header
+              // Horizontal Divider below header
               HorizontalDivider(
                 modifier = Modifier.padding(top = 8.dp, bottom = 10.dp),
                 thickness = 3.dp,
-                color = InvoiceBorderColor
+                color = tableBorderColor
               )
             }
 
@@ -566,13 +587,13 @@ fun InvoiceReportScreen(
                 ) {
                   Text(
                     text = "رقم الفاتورة / ",
-                    fontSize = 15.sp,
+                    fontSize = (15 * fontScale).sp,
                     fontWeight = FontWeight.Black,
-                    color = Color(0xFF0070BA)
+                    color = headerColor
                   )
                   Text(
                     text = invoice.invNum.trim().ifEmpty { "1" },
-                    fontSize = 15.5.sp,
+                    fontSize = (15.5 * fontScale).sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFFC62828)
                   )
@@ -586,13 +607,13 @@ fun InvoiceReportScreen(
                 ) {
                   Text(
                     text = "رقم الحساب ",
-                    fontSize = 15.sp,
+                    fontSize = (15 * fontScale).sp,
                     fontWeight = FontWeight.Black,
-                    color = Color.Black
+                    color = primaryTextColor
                   )
                   Text(
                     text = invoice.customerAccount.trim().ifEmpty { "—" },
-                    fontSize = 15.5.sp,
+                    fontSize = (15.5 * fontScale).sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFFC62828)
                   )
@@ -610,7 +631,7 @@ fun InvoiceReportScreen(
                 Text(
                   text = "فاتورة ${invoice.invType.trim().ifEmpty { if (isCash) "نقداً" else "أجل" }}",
                   color = Color.White,
-                  fontSize = 12.sp,
+                  fontSize = (12 * fontScale).sp,
                   fontWeight = FontWeight.Black,
                   maxLines = 1
                 )
@@ -619,9 +640,9 @@ fun InvoiceReportScreen(
               // Left in RTL: Date
               Text(
                 text = "تاريخ / $invDate",
-                fontSize = 14.sp,
+                fontSize = (14 * fontScale).sp,
                 fontWeight = FontWeight.Black,
-                color = Color.Black,
+                color = primaryTextColor,
                 modifier = Modifier.weight(1.3f),
                 textAlign = TextAlign.End,
                 maxLines = 1
@@ -646,15 +667,15 @@ fun InvoiceReportScreen(
                 ) {
                   Text(
                     text = "اسم العميل: ",
-                    fontSize = 14.5.sp,
+                    fontSize = (14.5 * fontScale).sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFFB71C1C)
                   )
                   Text(
                     text = invoice.customerName.trim().ifEmpty { "عميل نقدي" },
-                    fontSize = 14.5.sp,
+                    fontSize = (14.5 * fontScale).sp,
                     fontWeight = FontWeight.Black,
-                    color = Color(0xFF0070BA),
+                    color = headerColor,
                     maxLines = 1
                   )
                 }
@@ -667,20 +688,20 @@ fun InvoiceReportScreen(
                 ) {
                   Text(
                     text = "اسم العميل: ",
-                    fontSize = 14.5.sp,
+                    fontSize = (14.5 * fontScale).sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFFB71C1C)
                   )
                   Text(
                     text = invoice.customerName.trim().ifEmpty { "—" },
-                    fontSize = 14.5.sp,
+                    fontSize = (14.5 * fontScale).sp,
                     fontWeight = FontWeight.Black,
-                    color = Color(0xFF0070BA),
+                    color = headerColor,
                     maxLines = 1
                   )
                 }
 
-                // Left in RTL: Invoice Number (Label in blue, Number in red, reading correctly "رقم الفاتورة / 12")
+                // Left in RTL: Invoice Number (Label in headerColor, Number in red)
                 Row(
                   modifier = Modifier.weight(1.1f),
                   horizontalArrangement = Arrangement.End,
@@ -688,13 +709,13 @@ fun InvoiceReportScreen(
                 ) {
                   Text(
                     text = "رقم الفاتورة / ",
-                    fontSize = 14.5.sp,
+                    fontSize = (14.5 * fontScale).sp,
                     fontWeight = FontWeight.Black,
-                    color = Color(0xFF0070BA)
+                    color = headerColor
                   )
                   Text(
                     text = invoice.invNum.trim().ifEmpty { "1" },
-                    fontSize = 15.5.sp,
+                    fontSize = (15.5 * fontScale).sp,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFFC62828)
                   )
@@ -710,11 +731,11 @@ fun InvoiceReportScreen(
             Column(
               modifier = Modifier
                 .fillMaxWidth()
-                .border(3.dp, InvoiceBorderColor)
+                .border(3.dp, tableBorderColor)
             ) {
               // Table Header
-              val headerBg = if (isDisplayMode) Color(0xFF0070BA) else Color.White
-              val headerTextColor = if (isDisplayMode) Color.White else InvoiceBorderColor
+              val headerBg = if (isDisplayMode) tableBorderColor else Color.White
+              val headerTextColor = if (isDisplayMode) Color.White else headerColor
 
               Row(
                 modifier = Modifier
@@ -888,12 +909,12 @@ fun InvoiceReportScreen(
                         totalLen > 15 -> 12f
                         totalLen > 12 -> 13.5f
                         else -> 14.5f
-                      }
+                      } * fontScale
                       val totalSymFontSize = when {
                         totalLen > 15 -> 11f
                         totalLen > 12 -> 12.5f
                         else -> 13.5f
-                      }
+                      } * fontScale
                       Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
@@ -902,14 +923,14 @@ fun InvoiceReportScreen(
                           text = sym,
                           fontSize = totalSymFontSize.sp,
                           fontWeight = FontWeight.Bold,
-                          color = Color.Black
+                          color = primaryTextColor
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
                           text = formattedGrandTotal,
                           fontSize = totalNumberFontSize.sp,
                           fontWeight = FontWeight.Black,
-                          color = Color.Black,
+                          color = primaryTextColor,
                           maxLines = 1,
                           softWrap = false
                         )
@@ -921,7 +942,7 @@ fun InvoiceReportScreen(
 
                 // 2. Amount in Words covering columns العدد (1.2f) + التفاصيل (3.9f) = 5.1f
                 TableCell(
-                  text = amountInWords,
+                  text = if (effectiveReportConfig.showAmountInWords) amountInWords else "",
                   weight = 5.1f,
                   isBold = true,
                   fontSizeSp = 11.5f
@@ -933,7 +954,7 @@ fun InvoiceReportScreen(
                   text = "Total",
                   weight = 1.1f,
                   isBold = true,
-                  textColor = InvoiceBorderColor,
+                  textColor = headerColor,
                   fontSizeSp = 12f,
                   singleLine = true
                 )
@@ -947,7 +968,7 @@ fun InvoiceReportScreen(
               Card(
                 modifier = Modifier
                   .fillMaxWidth()
-                  .border(3.dp, InvoiceBorderColor, RoundedCornerShape(10.dp)),
+                  .border(3.dp, tableBorderColor, RoundedCornerShape(10.dp)),
                 shape = RoundedCornerShape(10.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
               ) {
@@ -959,10 +980,10 @@ fun InvoiceReportScreen(
                   // Subtle background watermark in subscription card
                   Text(
                     text = "ALMAMLAK ELECTRONICS",
-                    fontSize = 19.sp,
+                    fontSize = (19 * fontScale).sp,
                     fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp,
-                    color = Color(0xFF5E258D).copy(alpha = 0.08f),
+                    color = headerColor.copy(alpha = 0.08f),
                     modifier = Modifier.align(Alignment.Center)
                   )
 
@@ -986,23 +1007,23 @@ fun InvoiceReportScreen(
                           Icon(
                             imageVector = Icons.Default.CreditCard,
                             contentDescription = null,
-                            tint = Color(0xFF5E258D),
+                            tint = headerColor,
                             modifier = Modifier.size(20.dp)
                           )
                           Spacer(modifier = Modifier.width(6.dp))
                         }
                         Text(
                           text = "رقم الاشتراك",
-                          fontSize = 15.sp,
+                          fontSize = (15 * fontScale).sp,
                           fontWeight = FontWeight.ExtraBold,
-                          color = Color(0xFF5E258D),
+                          color = headerColor,
                           textAlign = TextAlign.Center
                         )
                       }
 
                       Text(
                         text = "|",
-                        fontSize = 20.sp,
+                        fontSize = (20 * fontScale).sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF90A4AE),
                         modifier = Modifier.padding(horizontal = 8.dp)
@@ -1018,16 +1039,16 @@ fun InvoiceReportScreen(
                           Icon(
                             imageVector = Icons.Default.CalendarToday,
                             contentDescription = null,
-                            tint = Color(0xFF5E258D),
+                            tint = headerColor,
                             modifier = Modifier.size(19.dp)
                           )
                           Spacer(modifier = Modifier.width(6.dp))
                         }
                         Text(
                           text = "تاريخ انتهاء الاشتراك",
-                          fontSize = 15.sp,
+                          fontSize = (15 * fontScale).sp,
                           fontWeight = FontWeight.ExtraBold,
-                          color = Color(0xFF5E258D),
+                          color = headerColor,
                           textAlign = TextAlign.Center
                         )
                       }
@@ -1041,7 +1062,7 @@ fun InvoiceReportScreen(
                     ) {
                       Text(
                         text = invoice.cardId.trim().ifEmpty { "—" },
-                        fontSize = 17.sp,
+                        fontSize = (17 * fontScale).sp,
                         fontWeight = FontWeight.Black,
                         color = Color(0xFFC62828),
                         modifier = Modifier.weight(1f),
@@ -1050,7 +1071,7 @@ fun InvoiceReportScreen(
                       Spacer(modifier = Modifier.width(16.dp))
                       Text(
                         text = invoice.endDate.trim().ifEmpty { "—" },
-                        fontSize = 17.sp,
+                        fontSize = (17 * fontScale).sp,
                         fontWeight = FontWeight.Black,
                         color = Color(0xFFC62828),
                         modifier = Modifier.weight(1f),
@@ -1097,16 +1118,16 @@ fun InvoiceReportScreen(
                           ) {
                             Text(
                               text = "▪",
-                              fontSize = 11.5.sp,
+                              fontSize = (11.5 * fontScale).sp,
                               fontWeight = FontWeight.Black,
-                              color = Color(0xFF0070BA),
+                              color = tableBorderColor,
                               modifier = Modifier.padding(start = 2.dp, end = 6.dp)
                             )
                             Text(
                               text = cleanLine,
-                              fontSize = 11.5.sp,
+                              fontSize = (11.5 * fontScale).sp,
                               fontWeight = FontWeight.Bold,
-                              color = Color(0xFF1E293B),
+                              color = primaryTextColor,
                               textAlign = TextAlign.Right,
                               modifier = Modifier.fillMaxWidth()
                             )
@@ -1136,16 +1157,16 @@ fun InvoiceReportScreen(
                         ) {
                           Text(
                             text = "▪",
-                            fontSize = 11.5.sp,
+                            fontSize = (11.5 * fontScale).sp,
                             fontWeight = FontWeight.Black,
-                            color = Color(0xFF0070BA),
+                            color = tableBorderColor,
                             modifier = Modifier.padding(start = 2.dp, end = 6.dp)
                           )
                           Text(
                             text = cleanLine,
-                            fontSize = 11.5.sp,
+                            fontSize = (11.5 * fontScale).sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black,
+                            color = primaryTextColor,
                             textAlign = TextAlign.Right,
                             modifier = Modifier.fillMaxWidth()
                           )
@@ -1162,12 +1183,113 @@ fun InvoiceReportScreen(
               Spacer(modifier = Modifier.height(10.dp))
               Text(
                 text = effectiveReportConfig.customFooterText,
-                fontSize = (12 * effectiveReportConfig.fontScale).sp,
+                fontSize = (12 * fontScale).sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Gray,
+                color = primaryTextColor,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
               )
+            }
+
+            // Signatures Section (خانات التوقيع)
+            if (effectiveReportConfig.showSignatures) {
+              Spacer(modifier = Modifier.height(14.dp))
+              Row(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                  Text(
+                    text = "توقيع المحاسب / أمين الصندوق",
+                    fontSize = (12 * fontScale).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = headerColor
+                  )
+                  if (effectiveReportConfig.accountantSignatureName.isNotBlank()) {
+                    Text(
+                      text = "(${effectiveReportConfig.accountantSignatureName})",
+                      fontSize = (11 * fontScale).sp,
+                      fontWeight = FontWeight.Bold,
+                      color = primaryTextColor
+                    )
+                  }
+                  Spacer(modifier = Modifier.height(6.dp))
+                  Text(
+                    text = ".......................",
+                    fontSize = (12 * fontScale).sp,
+                    color = Color.Gray
+                  )
+                }
+
+                if (effectiveReportConfig.showStampSeal) {
+                  Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFFFEBEE),
+                    border = BorderStroke(1.5.dp, Color(0xFFC62828)),
+                    modifier = Modifier.padding(horizontal = 6.dp)
+                  ) {
+                    Column(
+                      modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                      horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                      Text(
+                        text = "★ معتمد رسمياً ★",
+                        fontSize = (11 * fontScale).sp,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFFC62828)
+                      )
+                      Text(
+                        text = "APPROVED",
+                        fontSize = (9 * fontScale).sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFC62828)
+                      )
+                    }
+                  }
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                  Text(
+                    text = "توقيع المستلم / العميل",
+                    fontSize = (12 * fontScale).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = headerColor
+                  )
+                  if (effectiveReportConfig.managerSignatureName.isNotBlank()) {
+                    Text(
+                      text = "اعتماد: ${effectiveReportConfig.managerSignatureName}",
+                      fontSize = (11 * fontScale).sp,
+                      fontWeight = FontWeight.Bold,
+                      color = primaryTextColor
+                    )
+                  }
+                  Spacer(modifier = Modifier.height(6.dp))
+                  Text(
+                    text = ".......................",
+                    fontSize = (12 * fontScale).sp,
+                    color = Color.Gray
+                  )
+                }
+              }
+            } else if (effectiveReportConfig.showStampSeal) {
+              Spacer(modifier = Modifier.height(10.dp))
+              Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color(0xFFFFEBEE),
+                border = BorderStroke(1.5.dp, Color(0xFFC62828)),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+              ) {
+                Text(
+                  text = "★ معتمد رسمياً APPROVED ★",
+                  fontSize = (11.5 * fontScale).sp,
+                  fontWeight = FontWeight.Black,
+                  color = Color(0xFFC62828),
+                  modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp)
+                )
+              }
             }
           }
         }
@@ -1206,14 +1328,17 @@ fun RowScope.PriceCell(
   fontSizeSp: Float = 14f,
   isDisplayMode: Boolean = false
 ) {
+  val fontScale = LocalReportFontScale.current
+  val primaryText = LocalReportTextColor.current
+  val scaledFontSizeSp = fontSizeSp * fontScale
   val formatted = remember(amount) { ArabicNumberHelper.formatAmount(amount) }
   val combinedLen = curr.length + formatted.length
-  val effectiveFontSize = remember(combinedLen, fontSizeSp) {
+  val effectiveFontSize = remember(combinedLen, scaledFontSizeSp) {
     when {
-      combinedLen > 14 -> (fontSizeSp * 0.72f).coerceAtLeast(8.5f)
-      combinedLen > 11 -> (fontSizeSp * 0.82f).coerceAtLeast(9.5f)
-      combinedLen > 9 -> (fontSizeSp * 0.90f).coerceAtLeast(10.5f)
-      else -> fontSizeSp
+      combinedLen > 14 -> (scaledFontSizeSp * 0.72f).coerceAtLeast(8.5f)
+      combinedLen > 11 -> (scaledFontSizeSp * 0.82f).coerceAtLeast(9.5f)
+      combinedLen > 9 -> (scaledFontSizeSp * 0.90f).coerceAtLeast(10.5f)
+      else -> scaledFontSizeSp
     }
   }
 
@@ -1234,7 +1359,7 @@ fun RowScope.PriceCell(
           text = curr,
           fontSize = (effectiveFontSize - 0.5f).sp,
           fontWeight = FontWeight.Bold,
-          color = Color.Black,
+          color = primaryText,
           maxLines = 1,
           softWrap = false
         )
@@ -1243,7 +1368,7 @@ fun RowScope.PriceCell(
           text = formatted,
           fontSize = effectiveFontSize.sp,
           fontWeight = FontWeight.Black,
-          color = Color.Black,
+          color = primaryText,
           maxLines = 1,
           softWrap = false
         )
@@ -1262,10 +1387,23 @@ fun RowScope.TableCell(
   fontSizeSp: Float = 12f,
   singleLine: Boolean = false
 ) {
-  val baseCalculated = remember(text, fontSizeSp, singleLine) {
-    calculateAutoShrinkFontSize(text = text, baseFontSizeSp = fontSizeSp, isSingleLine = singleLine)
+  val fontScale = LocalReportFontScale.current
+  val scaledBase = fontSizeSp * fontScale
+  val baseCalculated = remember(text, scaledBase, singleLine) {
+    calculateAutoShrinkFontSize(text = text, baseFontSizeSp = scaledBase, isSingleLine = singleLine)
   }
   var currentFontSize by remember(text, baseCalculated) { mutableFloatStateOf(baseCalculated) }
+
+  val headerColor = LocalReportHeaderColor.current
+  val primaryText = LocalReportTextColor.current
+
+  val effectiveColor = if (isHeader && textColor == Color.Unspecified) {
+    headerColor
+  } else if (textColor != Color.Unspecified) {
+    textColor
+  } else {
+    primaryText
+  }
 
   Box(
     modifier = Modifier
@@ -1278,7 +1416,7 @@ fun RowScope.TableCell(
       text = text,
       fontSize = currentFontSize.sp,
       fontWeight = if (isHeader || isBold) FontWeight.ExtraBold else FontWeight.SemiBold,
-      color = if (isHeader && textColor == Color.Unspecified) InvoiceBorderColor else (if (textColor != Color.Unspecified) textColor else Color.Black),
+      color = effectiveColor,
       textAlign = TextAlign.Center,
       maxLines = if (singleLine) 1 else Int.MAX_VALUE,
       softWrap = !singleLine,
@@ -1294,15 +1432,17 @@ fun RowScope.TableCell(
 
 @Composable
 fun TableBorderV() {
+  val borderColor = LocalReportBorderColor.current
   Box(
     modifier = Modifier
       .fillMaxHeight()
       .width(2.dp)
-      .background(InvoiceBorderColor)
+      .background(borderColor)
   )
 }
 
 @Composable
 fun TableBorderH() {
-  HorizontalDivider(thickness = 2.dp, color = InvoiceBorderColor)
+  val borderColor = LocalReportBorderColor.current
+  HorizontalDivider(thickness = 2.dp, color = borderColor)
 }

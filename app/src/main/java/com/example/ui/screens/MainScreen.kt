@@ -924,16 +924,35 @@ fun InvoiceFormSection(viewModel: InvoiceViewModel) {
     // 6. تاريخ الانتهاء
     if (isFieldVisible("END_DATE")) {
       Column(modifier = Modifier.fillMaxWidth()) {
-        FormFieldLabel(text = "📅 تاريخ الانتهاء")
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          FormFieldLabel(text = "📅 تاريخ الانتهاء")
+          if (uiState.editingInvoiceId != null) {
+            Text(
+              text = "🔒 تاريخ الانتهاء ثابت لا يتغير عند التعديل",
+              fontSize = 11.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF2E7D32)
+            )
+          }
+        }
         StyledInputContainer(isYellowTheme = true) {
           BasicTextField(
             value = uiState.endDate,
-            onValueChange = { viewModel.updateEndDate(it) },
+            onValueChange = {
+              if (uiState.editingInvoiceId == null) {
+                viewModel.updateEndDate(it)
+              }
+            },
+            readOnly = uiState.editingInvoiceId != null,
             singleLine = true,
             textStyle = TextStyle(
               fontSize = 15.sp,
               fontWeight = FontWeight.Bold,
-              color = Color(0xFF212529),
+              color = if (uiState.editingInvoiceId != null) Color(0xFF2E7D32) else Color(0xFF212529),
               textAlign = TextAlign.Start
             ),
             cursorBrush = SolidColor(Color(0xFF5E258D)),

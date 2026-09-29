@@ -245,8 +245,8 @@ object PrintHelper {
 
     var rows = """
       <tr>
-        <td class="amount-cell"><span dir="ltr" style="font-size:${amountFontSizePx}px;font-weight:900;"><span style="color:#000000;font-weight:900;font-size:${amountFontSizePx}px;">$sym</span>&nbsp;<span style="color:#000000;font-weight:900;font-size:${amountFontSizePx}px;">${ArabicNumberHelper.formatAmount(mainTotalPrice)}</span></span></td>
-        <td class="amount-cell"><span dir="ltr" style="font-size:${amountFontSizePx}px;font-weight:900;"><span style="color:#000000;font-weight:900;font-size:${amountFontSizePx}px;">$sym</span>&nbsp;<span style="color:#000000;font-weight:900;font-size:${amountFontSizePx}px;">${ArabicNumberHelper.formatAmount(mainUnitPrice)}</span></span></td>
+        <td class="amount-cell"><span dir="ltr" style="font-size:${amountFontSizePx}px;font-weight:900;"><span style="color:${reportConfig.primaryTextColorHex};font-weight:900;font-size:${amountFontSizePx}px;">$sym</span>&nbsp;<span style="color:${reportConfig.primaryTextColorHex};font-weight:900;font-size:${amountFontSizePx}px;">${ArabicNumberHelper.formatAmount(mainTotalPrice)}</span></span></td>
+        <td class="amount-cell"><span dir="ltr" style="font-size:${amountFontSizePx}px;font-weight:900;"><span style="color:${reportConfig.primaryTextColorHex};font-weight:900;font-size:${amountFontSizePx}px;">$sym</span>&nbsp;<span style="color:${reportConfig.primaryTextColorHex};font-weight:900;font-size:${amountFontSizePx}px;">${ArabicNumberHelper.formatAmount(mainUnitPrice)}</span></span></td>
         <td class="qty-cell">$mainQty</td>
         <td class="extra-details-cell"><div class="extra-description">${invoice.desc.trim().ifEmpty { "تجديد باقة تميز" }}</div></td>
         <td class="num-cell">1</td>
@@ -259,8 +259,8 @@ object PrintHelper {
       val itemCurr = ArabicNumberHelper.getCurrencySymbol(if (item.currency.isNotEmpty()) item.currency else invoice.currency)
       rows += """
         <tr>
-          <td class="amount-cell"><span dir="ltr" style="font-size:${amountFontSizePx}px;font-weight:900;"><span style="color:#000000;font-weight:900;font-size:${amountFontSizePx}px;">$itemCurr</span>&nbsp;<span style="color:#000000;font-weight:900;font-size:${amountFontSizePx}px;">${ArabicNumberHelper.formatAmount(itemTotalPrice)}</span></span></td>
-          <td class="amount-cell"><span dir="ltr" style="font-size:${amountFontSizePx}px;font-weight:900;"><span style="color:#000000;font-weight:900;font-size:${amountFontSizePx}px;">$itemCurr</span>&nbsp;<span style="color:#000000;font-weight:900;font-size:${amountFontSizePx}px;">${ArabicNumberHelper.formatAmount(item.price)}</span></span></td>
+          <td class="amount-cell"><span dir="ltr" style="font-size:${amountFontSizePx}px;font-weight:900;"><span style="color:${reportConfig.primaryTextColorHex};font-weight:900;font-size:${amountFontSizePx}px;">$itemCurr</span>&nbsp;<span style="color:${reportConfig.primaryTextColorHex};font-weight:900;font-size:${amountFontSizePx}px;">${ArabicNumberHelper.formatAmount(itemTotalPrice)}</span></span></td>
+          <td class="amount-cell"><span dir="ltr" style="font-size:${amountFontSizePx}px;font-weight:900;"><span style="color:${reportConfig.primaryTextColorHex};font-weight:900;font-size:${amountFontSizePx}px;">$itemCurr</span>&nbsp;<span style="color:${reportConfig.primaryTextColorHex};font-weight:900;font-size:${amountFontSizePx}px;">${ArabicNumberHelper.formatAmount(item.price)}</span></span></td>
           <td class="qty-cell">${ArabicNumberHelper.toEngDigits(item.qty.toString().removeSuffix(".0"))}</td>
           <td class="extra-details-cell"><div class="extra-description">${item.description.ifEmpty { "—" }}</div></td>
           <td class="num-cell">$itemNumber</td>
@@ -280,7 +280,7 @@ object PrintHelper {
           <div class="store-name-ar">$effectiveStoreNameAr</div>
           <div class="store-address" style="margin:2px 0;">$effectiveAddressAr</div>
           <div class="store-phone">تلفون / <span class="phone-num">$effectivePhone</span></div>
-          ${if (reportConfig.taxOrCrNumber.isNotBlank()) "<div style='font-size:11px;color:#212529;'>الرقم الضريبي/السجل: ${reportConfig.taxOrCrNumber}</div>" else ""}
+          ${if (reportConfig.taxOrCrNumber.isNotBlank()) "<div style='font-size:11px;color:${reportConfig.primaryTextColorHex};'>الرقم الضريبي/السجل: ${reportConfig.taxOrCrNumber}</div>" else ""}
         </div>
       """.trimIndent()
     } else """<div class="company-info"></div>"""
@@ -306,20 +306,20 @@ object PrintHelper {
     } else """<div class="inv-store-box"></div>"""
 
     val customerAccountHtml = if (reportConfig.showCustomerAccountNumber && invoice.customerAccount.isNotBlank()) {
-      """ <span style="font-size:${12 * scale}px;color:#5E258D;">(حساب: ${invoice.customerAccount})</span>"""
+      """ <span style="font-size:${12 * scale}px;color:${reportConfig.headerColorHex};">(حساب: ${invoice.customerAccount})</span>"""
     } else ""
 
     val subCardHtml = if (reportConfig.showCardSubscriptionBox) {
       """
         <div class="sub-card-box">
           <div class="watermark-bg">
-            <div class="wm-en" style="font-size:26px;font-weight:900;letter-spacing:4px;opacity:0.08;color:#5E258D;white-space:nowrap;">ALMAMLAK ELECTRONIC</div>
+            <div class="wm-en" style="font-size:26px;font-weight:900;letter-spacing:4px;opacity:0.08;color:${reportConfig.headerColorHex};white-space:nowrap;">ALMAMLAK ELECTRONIC</div>
           </div>
           <div class="overlay-content">
             <div style="display:flex;justify-content:space-around;align-items:center;width:100%;margin-bottom:6px;">
-              <div style="flex:1;text-align:center;font-size:${14 * scale}px;font-weight:900;color:#5E258D;">رقم الاشتراك</div>
+              <div style="flex:1;text-align:center;font-size:${14 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};">رقم الاشتراك</div>
               <div style="font-size:18px;color:#90A4AE;font-weight:bold;margin:0 12px;">|</div>
-              <div style="flex:1;text-align:center;font-size:${14 * scale}px;font-weight:900;color:#5E258D;">تاريخ انتهاء الاشتراك</div>
+              <div style="flex:1;text-align:center;font-size:${14 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};">تاريخ انتهاء الاشتراك</div>
             </div>
             <div style="display:flex;justify-content:space-around;align-items:center;width:100%;">
               <div style="flex:1;text-align:center;font-size:${17 * scale}px;font-weight:900;color:#C62828;" dir="ltr">${invoice.cardId.trim().ifEmpty { "—" }}</div>
@@ -339,7 +339,7 @@ object PrintHelper {
         .filter { it.isNotEmpty() }
         .joinToString("") { line ->
           val cleanLine = line.removePrefix("•").removePrefix("▪").removePrefix("-").trim()
-          """<div class="term-line" style="margin-bottom:3px;text-align:right;direction:rtl;font-size:${11 * scale}px;font-weight:700;color:#000000;"><span style="color:#0070BA;font-weight:900;margin-left:6px;">▪</span>$cleanLine</div>"""
+          """<div class="term-line" style="margin-bottom:3px;text-align:right;direction:rtl;font-size:${11 * scale}px;font-weight:700;color:${reportConfig.primaryTextColorHex};"><span style="color:${reportConfig.tableBorderColorHex};font-weight:900;margin-left:6px;">▪</span>$cleanLine</div>"""
         }
       """
         <div class="terms-text" dir="rtl" style="text-align:right;direction:rtl;margin-top:10px;padding:2px 4px;">
@@ -386,7 +386,7 @@ object PrintHelper {
         width: 100%;
         max-width: 820px;
         background: #fff;
-        border: 3.5px solid #0070BA;
+        border: 3.5px solid ${reportConfig.tableBorderColorHex};
         border-radius: 12px;
         padding: 16px 18px 20px 18px;
         position: relative;
@@ -401,53 +401,53 @@ object PrintHelper {
         .invoice-card {
           width: 100% !important;
           max-width: 100% !important;
-          border: 2.5px solid #0070BA !important;
+          border: 2.5px solid ${reportConfig.tableBorderColorHex} !important;
           border-radius: 8px !important;
           padding: 12px 14px !important;
           page-break-inside: avoid !important;
         }
       }
       .inv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;position:relative;z-index:2;}
-      .company-info{font-size:${18 * scale}px;line-height:1.4;font-weight:700;width:37%;color:#5E258D;}
-      .store-name-ar{font-size:${22 * scale}px;font-weight:900;color:#5E258D;margin-bottom:2px;white-space:nowrap;}
-      .store-name-en{font-size:${19 * scale}px;font-weight:900;color:#5E258D;margin-bottom:2px;white-space:nowrap;}
-      .store-address{font-size:${18 * scale}px;font-weight:700;color:#212529;margin:2px 0;}
-      .store-phone{font-size:${18 * scale}px;font-weight:900;color:#5E258D;}
-      .phone-num{font-size:${18 * scale}px;font-weight:900;color:#5E258D;}
+      .company-info{font-size:${18 * scale}px;line-height:1.4;font-weight:700;width:37%;color:${reportConfig.headerColorHex};}
+      .store-name-ar{font-size:${22 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};margin-bottom:2px;white-space:nowrap;}
+      .store-name-en{font-size:${19 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};margin-bottom:2px;white-space:nowrap;}
+      .store-address{font-size:${18 * scale}px;font-weight:700;color:${reportConfig.primaryTextColorHex};margin:2px 0;}
+      .store-phone{font-size:${18 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};}
+      .phone-num{font-size:${18 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};}
       .brand-box{text-align:center;width:24%;display:flex;justify-content:center;align-items:center;}
       .logo-container{width:96px;height:96px;border-radius:50%;overflow:hidden;display:flex;justify-content:center;align-items:center;}
-      .meta-bar-top{border-top:3px solid #0070BA;padding-top:10px;margin-top:8px;position:relative;z-index:2;}
+      .meta-bar-top{border-top:3px solid ${reportConfig.tableBorderColorHex};padding-top:10px;margin-top:8px;position:relative;z-index:2;}
       .meta-row-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-      .inv-date-box{font-weight:800;font-size:${14 * scale}px;color:#000;width:38%;text-align:left;}
-      .inv-account-box{font-weight:900;font-size:${14 * scale}px;color:#000;width:38%;text-align:right;}
+      .inv-date-box{font-weight:800;font-size:${14 * scale}px;color:${reportConfig.primaryTextColorHex};width:38%;text-align:left;}
+      .inv-account-box{font-weight:900;font-size:${14 * scale}px;color:${reportConfig.primaryTextColorHex};width:38%;text-align:right;}
       .inv-customer-box{font-weight:900;font-size:${14.5 * scale}px;color:#B71C1C;text-align:right;}
-      .inv-num-box{font-weight:900;font-size:${14.5 * scale}px;color:#0070BA;text-align:left;}
+      .inv-num-box{font-weight:900;font-size:${14.5 * scale}px;color:${reportConfig.headerColorHex};text-align:left;}
       .inv-type-tag-box{width:24%;text-align:center;}
       .inv-type-tag{background:#B71C1C;color:#fff;padding:5px 18px;font-size:${14 * scale}px;font-weight:900;border-radius:8px;display:inline-block;}
       .meta-details-grid{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-      .items-table{width:100%;table-layout:fixed;border-collapse:collapse;border:3px solid #0070BA;margin-bottom:0;position:relative;z-index:2;background:transparent;}
-      .items-table th,.items-table td{border:2px solid #0070BA;text-align:center;padding:6px 4px;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;}
-      .items-table th{background:rgba(255,255,255,0.92);color:#0070BA;font-size:${13.5 * scale}px;font-weight:900;}
+      .items-table{width:100%;table-layout:fixed;border-collapse:collapse;border:3px solid ${reportConfig.tableBorderColorHex};margin-bottom:0;position:relative;z-index:2;background:transparent;}
+      .items-table th,.items-table td{border:2px solid ${reportConfig.tableBorderColorHex};text-align:center;padding:6px 4px;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word;}
+      .items-table th{background:rgba(255,255,255,0.92);color:${reportConfig.headerColorHex};font-size:${13.5 * scale}px;font-weight:900;}
       .items-table td{background:rgba(255,255,255,0.72);}
-      .num-cell{font-size:${13.5 * scale}px;font-weight:900;color:#000;}
+      .num-cell{font-size:${13.5 * scale}px;font-weight:900;color:${reportConfig.primaryTextColorHex};}
       .extra-details-cell{text-align:center;padding:5px 6px;}
-      .extra-description{font-size:${13.5 * scale}px;font-weight:900;color:#000;line-height:1.3;display:inline-block;}
-      .qty-cell{font-size:${13.5 * scale}px;font-weight:900;color:#000;white-space:nowrap;}
-      .amount-cell{font-size:${14 * scale}px;font-weight:900;color:#000000;white-space:nowrap;letter-spacing:-0.2px;}
-      .total-words-box{font-size:${12.5 * scale}px;font-weight:800;color:#000;text-align:center;word-wrap:break-word;overflow-wrap:break-word;}
-      .total-label-box{font-size:${13.5 * scale}px;font-weight:900;color:#0070BA;}
-      .sub-card-box{margin-top:14px;border:3px solid #0070BA;border-radius:10px;position:relative;background:rgba(255,255,255,0.85);padding:10px 14px;overflow:hidden;z-index:2;}
+      .extra-description{font-size:${13.5 * scale}px;font-weight:900;color:${reportConfig.primaryTextColorHex};line-height:1.3;display:inline-block;}
+      .qty-cell{font-size:${13.5 * scale}px;font-weight:900;color:${reportConfig.primaryTextColorHex};white-space:nowrap;}
+      .amount-cell{font-size:${14 * scale}px;font-weight:900;color:${reportConfig.primaryTextColorHex};white-space:nowrap;letter-spacing:-0.2px;}
+      .total-words-box{font-size:${12.5 * scale}px;font-weight:800;color:${reportConfig.primaryTextColorHex};text-align:center;word-wrap:break-word;overflow-wrap:break-word;}
+      .total-label-box{font-size:${13.5 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};}
+      .sub-card-box{margin-top:14px;border:3px solid ${reportConfig.tableBorderColorHex};border-radius:10px;position:relative;background:rgba(255,255,255,0.85);padding:10px 14px;overflow:hidden;z-index:2;}
       .watermark-bg{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;z-index:0;}
       .card-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;z-index:0;opacity:0.12;width:100%;text-align:center;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
-      .wm-logo-img{width:190px;height:190px;object-fit:cover;border-radius:50%;margin-bottom:8px;display:block;border:4px solid #5E258D;}
+      .wm-logo-img{width:190px;height:190px;object-fit:cover;border-radius:50%;margin-bottom:8px;display:block;border:4px solid ${reportConfig.headerColorHex};}
       .wm-logo-svg{width:190px;height:190px;margin-bottom:8px;display:flex;justify-content:center;align-items:center;}
-      .wm-title-ar{font-size:26px;font-weight:900;color:#5E258D;margin-bottom:4px;white-space:nowrap;line-height:1.2;}
-      .wm-title-en{font-size:17px;font-weight:900;color:#5E258D;letter-spacing:3px;white-space:nowrap;line-height:1.2;}
+      .wm-title-ar{font-size:26px;font-weight:900;color:${reportConfig.headerColorHex};margin-bottom:4px;white-space:nowrap;line-height:1.2;}
+      .wm-title-en{font-size:17px;font-weight:900;color:${reportConfig.headerColorHex};letter-spacing:3px;white-space:nowrap;line-height:1.2;}
       @media print {
         .card-watermark{opacity:0.15 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
       }
       .overlay-content{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%;}
-      .terms-text{margin-top:10px;font-size:${11 * scale}px;font-weight:700;color:#000000;line-height:1.6;text-align:right;direction:rtl;position:relative;z-index:2;}
+      .terms-text{margin-top:10px;font-size:${11 * scale}px;font-weight:700;color:${reportConfig.primaryTextColorHex};line-height:1.6;text-align:right;direction:rtl;position:relative;z-index:2;}
       </style>
       </head>
       <body>
@@ -777,7 +777,7 @@ object PrintHelper {
         width: 100%;
         max-width: 880px;
         background: #fff;
-        border: 3.5px solid #0070BA;
+        border: 3.5px solid ${reportConfig.tableBorderColorHex};
         border-radius: 12px;
         padding: 16px 18px 20px 18px;
         position: relative;
@@ -792,37 +792,37 @@ object PrintHelper {
         .invoice-card {
           width: 100% !important;
           max-width: 100% !important;
-          border: 2.5px solid #0070BA !important;
+          border: 2.5px solid ${reportConfig.tableBorderColorHex} !important;
           border-radius: 8px !important;
           padding: 12px 14px !important;
         }
       }
       .inv-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;position:relative;z-index:2;}
-      .company-info{font-size:${18 * scale}px;line-height:1.4;font-weight:700;width:37%;color:#5E258D;}
-      .store-name-ar{font-size:${22 * scale}px;font-weight:900;color:#5E258D;margin-bottom:2px;white-space:nowrap;}
-      .store-name-en{font-size:${19 * scale}px;font-weight:900;color:#5E258D;margin-bottom:2px;white-space:nowrap;}
-      .store-address{font-size:${18 * scale}px;font-weight:700;color:#212529;margin:2px 0;}
-      .store-phone{font-size:${18 * scale}px;font-weight:800;color:#5E258D;}
-      .phone-num{font-size:${18 * scale}px;font-weight:800;color:#5E258D;}
+      .company-info{font-size:${18 * scale}px;line-height:1.4;font-weight:700;width:37%;color:${reportConfig.headerColorHex};}
+      .store-name-ar{font-size:${22 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};margin-bottom:2px;white-space:nowrap;}
+      .store-name-en{font-size:${19 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};margin-bottom:2px;white-space:nowrap;}
+      .store-address{font-size:${18 * scale}px;font-weight:700;color:${reportConfig.primaryTextColorHex};margin:2px 0;}
+      .store-phone{font-size:${18 * scale}px;font-weight:800;color:${reportConfig.headerColorHex};}
+      .phone-num{font-size:${18 * scale}px;font-weight:800;color:${reportConfig.headerColorHex};}
       .brand-box{text-align:center;width:24%;display:flex;justify-content:center;align-items:center;}
       .logo-container{width:92px;height:92px;border-radius:50%;overflow:hidden;display:flex;justify-content:center;align-items:center;}
-      .meta-bar-top{border-top:3px solid #0070BA;padding-top:10px;margin-top:8px;position:relative;z-index:2;}
+      .meta-bar-top{border-top:3px solid ${reportConfig.tableBorderColorHex};padding-top:10px;margin-top:8px;position:relative;z-index:2;}
       .meta-row-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-      .inv-account-box{font-weight:900;font-size:${14.5 * scale}px;color:#000;flex:1;text-align:right;}
+      .inv-account-box{font-weight:900;font-size:${14.5 * scale}px;color:${reportConfig.primaryTextColorHex};flex:1;text-align:right;}
       .inv-type-tag-box{flex:0 0 auto;text-align:center;padding:0 8px;}
-      .inv-type-tag{background:#5E258D;color:#fff;padding:5px 18px;font-size:${14 * scale}px;font-weight:900;border-radius:8px;display:inline-block;white-space:nowrap;line-height:1.2;}
-      .inv-date-box{font-weight:900;font-size:${14.5 * scale}px;color:#000;flex:1;text-align:left;}
+      .inv-type-tag{background:${reportConfig.headerColorHex};color:#fff;padding:5px 18px;font-size:${14 * scale}px;font-weight:900;border-radius:8px;display:inline-block;white-space:nowrap;line-height:1.2;}
+      .inv-date-box{font-weight:900;font-size:${14.5 * scale}px;color:${reportConfig.primaryTextColorHex};flex:1;text-align:left;}
       .inv-customer-box{font-weight:900;font-size:${17.5 * scale}px;color:#C62828;text-align:right;margin-top:4px;margin-bottom:8px;}
-      .statement-table{width:100%;border-collapse:collapse;border:3px solid #0070BA;margin-bottom:0;position:relative;z-index:2;background:transparent;}
-      .statement-table th,.statement-table td{border:2px solid #0070BA;text-align:center;padding:9px 6px;vertical-align:middle;}
-      .statement-table th{background:rgba(255,255,255,0.92);color:#0070BA;font-size:${14 * scale}px;font-weight:800;}
-      .statement-table td{background:rgba(255,255,255,0.72);}
+      .statement-table{width:100%;border-collapse:collapse;border:3px solid ${reportConfig.tableBorderColorHex};margin-bottom:0;position:relative;z-index:2;background:transparent;}
+      .statement-table th,.statement-table td{border:2px solid ${reportConfig.tableBorderColorHex};text-align:center;padding:9px 6px;vertical-align:middle;}
+      .statement-table th{background:rgba(255,255,255,0.92);color:${reportConfig.headerColorHex};font-size:${14 * scale}px;font-weight:800;}
+      .statement-table td{background:rgba(255,255,255,0.72);color:${reportConfig.primaryTextColorHex};}
       .footer-summary-container{display:flex;justify-content:space-between;gap:12px;margin-top:16px;position:relative;z-index:2;}
       .card-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;z-index:0;opacity:0.12;width:100%;text-align:center;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
-      .wm-logo-img{width:200px;height:200px;object-fit:cover;border-radius:50%;margin-bottom:8px;display:block;border:4px solid #5E258D;}
+      .wm-logo-img{width:200px;height:200px;object-fit:cover;border-radius:50%;margin-bottom:8px;display:block;border:4px solid ${reportConfig.headerColorHex};}
       .wm-logo-svg{width:200px;height:200px;margin-bottom:8px;display:flex;justify-content:center;align-items:center;}
-      .wm-title-ar{font-size:26px;font-weight:900;color:#5E258D;margin-bottom:4px;white-space:nowrap;line-height:1.2;}
-      .wm-title-en{font-size:17px;font-weight:900;color:#5E258D;letter-spacing:3px;white-space:nowrap;line-height:1.2;}
+      .wm-title-ar{font-size:26px;font-weight:900;color:${reportConfig.headerColorHex};margin-bottom:4px;white-space:nowrap;line-height:1.2;}
+      .wm-title-en{font-size:17px;font-weight:900;color:${reportConfig.headerColorHex};letter-spacing:3px;white-space:nowrap;line-height:1.2;}
       @media print {
         .card-watermark{opacity:0.15 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
       }
@@ -1194,15 +1194,15 @@ object PrintHelper {
         .card-watermark { opacity: 0.15 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       }
       .card-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;justify-content:center;align-items:center;pointer-events:none;z-index:0;opacity:0.12;width:100%;text-align:center;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
-      .wm-logo-img{width:200px;height:200px;object-fit:cover;border-radius:50%;margin-bottom:8px;display:block;border:4px solid #5E258D;}
+      .wm-logo-img{width:200px;height:200px;object-fit:cover;border-radius:50%;margin-bottom:8px;display:block;border:4px solid ${reportConfig.headerColorHex};}
       .wm-logo-svg{width:200px;height:200px;margin-bottom:8px;display:flex;justify-content:center;align-items:center;}
-      .wm-title-ar{font-size:26px;font-weight:900;color:#5E258D;margin-bottom:4px;white-space:nowrap;line-height:1.2;}
-      .wm-title-en{font-size:17px;font-weight:900;color:#5E258D;letter-spacing:3px;white-space:nowrap;line-height:1.2;}
+      .wm-title-ar{font-size:26px;font-weight:900;color:${reportConfig.headerColorHex};margin-bottom:4px;white-space:nowrap;line-height:1.2;}
+      .wm-title-en{font-size:17px;font-weight:900;color:${reportConfig.headerColorHex};letter-spacing:3px;white-space:nowrap;line-height:1.2;}
       .header-row{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid $mainColor;padding-bottom:10px;margin-bottom:12px;position:relative;z-index:2;}
       .company-info{width:38%;font-size:${18 * scale}px;line-height:1.4;font-weight:700;color:${reportConfig.headerColorHex};}
       .store-name-ar{font-size:${22 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};margin-bottom:2px;white-space:nowrap;}
       .store-name-en{font-size:${19 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};margin-bottom:2px;white-space:nowrap;}
-      .store-address{font-size:${18 * scale}px;font-weight:700;color:#212529;margin:2px 0;}
+      .store-address{font-size:${18 * scale}px;font-weight:700;color:${reportConfig.primaryTextColorHex};margin:2px 0;}
       .store-phone{font-size:${18 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};}
       .phone-num{font-size:${18 * scale}px;font-weight:900;color:${reportConfig.headerColorHex};}
       .brand-box{width:24%;display:flex;justify-content:center;align-items:center;}
@@ -1217,11 +1217,11 @@ object PrintHelper {
       .amount-words{font-size:${14 * scale}px;font-weight:800;color:${reportConfig.primaryTextColorHex};}
       .fields-table{width:100%;border-collapse:collapse;margin-bottom:16px;}
       .fields-table td{padding:8px 6px;border-bottom:1px dashed #ccc;}
-      .field-label{width:25%;font-weight:800;color:#495057;font-size:${14 * scale}px;}
+      .field-label{width:25%;font-weight:800;color:${reportConfig.primaryTextColorHex};font-size:${14 * scale}px;}
       .field-val{width:75%;font-weight:900;color:${reportConfig.primaryTextColorHex};font-size:${15 * scale}px;}
       .signatures-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:25px;padding:0 15px 10px 15px;}
       .sig-box{width:38%;text-align:center;}
-      .sig-title{font-size:${13 * scale}px;font-weight:800;color:#495057;margin-bottom:32px;}
+      .sig-title{font-size:${13 * scale}px;font-weight:800;color:${reportConfig.primaryTextColorHex};margin-bottom:32px;}
       .sig-line{border-top:1.5px solid #6c757d;}
       .footer-note{text-align:center;font-size:${11 * scale}px;color:#888;margin-top:14px;border-top:1px solid #eee;padding-top:6px;}
       </style>
